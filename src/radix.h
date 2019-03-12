@@ -106,4 +106,17 @@ A boolean indicating whether the node is terminal
 */
 bool is_terminal(Node* node);
 
+/**
+Get the data associated to a node.
+
+Parameters
+----------
+node: The node from which to retrieve data.
+
+Returns
+-------
+The data associated to the node.
+*/
+char* get_node_data(Node* node);
+
 #endif
