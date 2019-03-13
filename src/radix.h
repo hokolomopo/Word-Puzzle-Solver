@@ -6,6 +6,8 @@
 typedef struct RadixDic_t RadixDic;
 typedef struct Node_t Node;
 
+void print_dic(RadixDic* dic);
+
 /**
 Create an empty dictionnary.
 
@@ -33,34 +35,48 @@ void
 void delete_dictionnary(RadixDic* dic);
 
 /**
-Insert a given world in a given dictionnary.
+Insert data with a given key in a dictionnary.
 
 Parameters
 ----------
-dic: The dictionnary in which to insert the word
-word: The word to insert
-length: The length of the word.
+dic: The dictionnary in which to insert the data.
+key: The key.
+data: The data to insert;
 
 Returns
 -------
 void
 */
-void insert_word(RadixDic* dic, char* word, size_t length);
+void insert(RadixDic* dic, char* key, void* data);
 
 /**
-Indicate if a given word is in a given dictionnary.
+Indicate if a given word key is in a given dictionnary.
 
 Parameters
 ----------
-dic: The dictionnary in which to search the word
-word: The word to search
-length: The length of the word.
+dic: The dictionnary in which to search the key.
+key: The key to search.
 
 Returns
 -------
 A boolean indicating if the word is in the dictionnary.
 */
-bool is_word_in_dic(RadixDic* dic, char* word, size_t length);
+bool is_key_in_dic(RadixDic* dic, char* key);
+
+/**
+Retrieve the data associated to a given key
+
+Parameters
+----------
+dic: The dictionnary in which to search the data.
+key: The key to search.
+keyLength: The length of the key.
+
+Returns
+-------
+The data associated to the key, NULL of the key is not in the dictionnary.
+*/
+void* get_data(RadixDic* dic, char* key);
 
 /**
 Get the root node of a radix dictionnary.
@@ -76,21 +92,19 @@ The root of the dictionnary
 Node* get_root(RadixDic* dic);
 
 /**
-Get the node following the current node when the next symbol of the key is
-symbol.
+Get the node correspoding to reading symbol "symbol" form the current node.
 
 Parameters
 ----------
-dic: The dictionnary containing the node
-currNode: The current node
-symbol: The next symbol of the key
+currNode: The current node.
+symbol: The next symbol of the key.
 
 Returns
 -------
-The next node if there exists word in the dictionnary with the current read
-symbol of the key as prefix. NULL otherwise. 
+The next node if there exist word in the dictionnary with this symbol as next 
+symbol, NULL otherwise. 
 */
-Node* next_node(RadixDic* dic, Node* currNode, char symbol);
+Node* next_node(Node* currNode, char symbol);
 
 /**
 Indicate whether a node is terminal, i.e. represent the end of a word in the
