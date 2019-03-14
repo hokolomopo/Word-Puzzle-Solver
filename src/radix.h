@@ -17,7 +17,7 @@ void
 
 Returns
 -------
-An empty dictionnary
+An empty dictionnary, or NULL in case allocation failed.
 */
 RadixDic* create_empty_dictionnary();
 
@@ -26,7 +26,7 @@ Deallocate a dictionnary.
 
 Parameters
 ----------
-dic: The dictionnary to deallocate
+dic: The dictionnary to deallocate.
 
 Returns
 -------
@@ -35,7 +35,8 @@ void
 void delete_dictionnary(RadixDic* dic);
 
 /**
-Insert data with a given key in a dictionnary.
+Insert data with a given key in a dictionnary. If the key is already in the
+dictionnary, it erases previous content to put new data.
 
 Parameters
 ----------
@@ -83,11 +84,11 @@ Get the root node of a radix dictionnary.
 
 Parameters
 ----------
-dic: The dictionnary from which to get the root
+dic: The dictionnary from which to get the root.
 
 Returns
 -------
-The root of the dictionnary 
+The root of the dictionnary.
 */
 Node* get_root(RadixDic* dic);
 
@@ -112,11 +113,11 @@ dictionnary.
 
 Parameters
 ----------
-node: The node to check
+node: The node to check.
 
 Returns
 -------
-A boolean indicating whether the node is terminal
+A boolean indicating whether the node is terminal.
 */
 bool is_terminal(Node* node);
 
@@ -132,5 +133,31 @@ Returns
 The data associated to the node.
 */
 char* get_node_data(Node* node);
+
+/**
+Get the number of elements in the dictionnary.
+
+Parameters
+----------
+dic: The dictionnary from which to get the number of elements.
+
+Returns
+-------
+The number of elements in the dictionnary.
+*/
+size_t get_dic_size(RadixDic* dic);
+
+/**
+Get length of the key of maximal length in the dictionnary.
+
+Parameters
+----------
+dic: The dictionnary from which to get the maximal key length.
+
+Returns
+-------
+The length of the key of maximal length.
+*/
+size_t get_dic_max_length(RadixDic* dic);
 
 #endif
