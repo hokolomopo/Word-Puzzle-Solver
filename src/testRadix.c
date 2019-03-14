@@ -2,13 +2,18 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <stddef.h>
+#include <stdbool.h>
+#include <stdlib.h>
 
 int main(){
 	RadixDic* dic = create_empty_dictionnary();
-	char* word1 = "lol";
-	char* word2 = "ptdr";
-	char* word3 = "lolee";
-	char* word4 = "lo";
+	char* word1 = strdup("lol");
+	char* word2 = strdup("ptdr");
+	char* word3 = strdup("lolee");
+	char* word4 = strdup("lo");
+	char* words[4] = {word1, word2, word3, word4};
+	size_t WORDS_LENGTH = 4;
 	char* notInDic1 = "mdr"; 
 	char* notInDic2 = "lor";
 
@@ -41,9 +46,30 @@ int main(){
 	assert(get_data(dic, notInDic1) == NULL);
 	assert(get_data(dic, notInDic2) == NULL);
 
+	fprintf(stderr, "before\n");
+	void** datas = get_all_data(dic);
+	fprintf(stderr, "after\n");
+	
+	for(size_t i = 0; i < WORDS_LENGTH; i++){
+		fprintf(stderr, "iteration %ld\n", i);
+		
+		bool isInDic = false;
+		for(size_t j = 0; j < get_dic_size(dic); j++){
+			if(strcmp(words[i], datas[j]) == 0){
+				isInDic = true;
+				break;
+			}
+		}
+
+		assert(isInDic);
+	}
+
 	insert(dic, word3, word4);
 	assert(strcmp(word4, (char*)get_data(dic, word3)) == 0);
 	assert(get_dic_size(dic) == 4);
 	assert(get_dic_max_length(dic) == 5);
 
+	fprintf(stderr, "before free\n");
+
+	delete_dictionnary(dic);
 }

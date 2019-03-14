@@ -400,3 +400,44 @@ size_t get_dic_max_length(RadixDic* dic){
 
 	return dic -> maxWordLength;
 }
+
+static void add_data_recursively(Node* currNode, void** datas, 
+								 size_t* currIndex){
+	if(!currNode)
+		return;
+
+	if(currNode -> data){
+		datas[*currIndex] = currNode -> data;
+		(*currIndex)++;
+	}
+
+	add_data_recursively(currNode -> leftSon, datas, currIndex);
+	add_data_recursively(currNode -> middleSon, datas, currIndex);
+	add_data_recursively(currNode -> rightSon, datas, currIndex);
+}
+
+/**
+Get all the data in the dictionnary.
+
+Parameters
+----------
+dic: The dictionnary from which to get the data
+
+Returns
+-------
+An array of pointers to the data in the dictionnary. Note that the data are not
+duplicated, NULL in case of allocation failure. The array returned is of size
+dic -> size.
+*/
+void** get_all_data(RadixDic* dic){
+	void** datas = malloc(dic -> size * sizeof(void*));
+	
+	if(!datas)
+		return NULL;
+
+	size_t currIndex = 0;
+
+	add_data_recursively(dic -> root, datas, &currIndex);
+
+	return datas;
+}

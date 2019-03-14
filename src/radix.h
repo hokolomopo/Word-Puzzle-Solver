@@ -160,4 +160,19 @@ The length of the key of maximal length.
 */
 size_t get_dic_max_length(RadixDic* dic);
 
+/**
+Get all the data in the dictionnary.
+
+Parameters
+----------
+dic: The dictionnary from which to get the data
+
+Returns
+-------
+An array of pointers to the data in the dictionnary. Note that the data are not
+duplicated, NULL in case of allocation failure. The array returned is of size
+dic -> size.
+*/
+void** get_all_data(RadixDic* dic);
+
 #endif
