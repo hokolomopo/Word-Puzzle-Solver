@@ -33,6 +33,7 @@ A node structure to which the symbol "symbol" is associated, or NULL is case
 allocation failed.
 */
 static Node* create_node(char symbol){
+
 	Node* node = malloc(sizeof(Node));
 	
 	if (!node)
@@ -59,7 +60,6 @@ Returns
 void
 */
 static void delete_node_subtree(Node* node){
-	assert(node);
 
 	free(node -> data);
 
@@ -87,6 +87,7 @@ Returns
 An empty dictionnary, or NULL in case allocation failed.
 */
 RadixDic* create_empty_dictionnary(){
+
 	RadixDic* dic = malloc(sizeof(RadixDic));
 
 	if(!dic)
@@ -111,6 +112,7 @@ Returns
 void
 */
 void delete_dictionnary(RadixDic* dic){
+
 	assert(dic);
 
 	if(dic -> root)
@@ -127,13 +129,15 @@ Parameters
 ----------
 dic: The dictionnary in which to insert the data.
 key: The key.
-data: The data to insert;
+data: The data to insert, the user should insert a copy of the data as those
+	  will be freed with dictionnary.
 
 Returns
 -------
 void
 */
 void insert(RadixDic* dic, char* key, void* data){
+
 	assert(dic);
 	assert(key);
 	assert(data);
@@ -223,8 +227,6 @@ The node corresponding to the key, NULL if the key does not exist in the
 dictionnary
 */
 static Node* get_corresponding_node(RadixDic* dic, char* key){
-	assert(dic);
-	assert(key);
 
 	Node* currNode = dic -> root;
 
@@ -247,6 +249,7 @@ Returns
 A boolean indicating if the word is in the dictionnary.
 */
 bool is_key_in_dic(RadixDic* dic, char* key){
+
 	assert(dic);
 	assert(key);
 
@@ -272,6 +275,7 @@ Returns
 The data associated to the key, NULL of the key is not in the dictionnary.
 */
 void* get_data(RadixDic* dic, char* key){
+
 	assert(dic);
 	assert(key);
 
@@ -295,6 +299,7 @@ Returns
 The root of the dictionnary.
 */
 Node* get_root(RadixDic* dic){
+
 	assert(dic);
 
 	return dic -> root;
@@ -314,6 +319,7 @@ The next node if there exist word in the dictionnary with this symbol as next
 symbol, NULL otherwise. 
 */
 Node* next_node(Node* currNode, char symbol){
+
 	assert(currNode);
 
 	while(currNode){
@@ -345,6 +351,7 @@ Returns
 A boolean indicating whether the node is terminal.
 */
 bool is_terminal(Node* node){
+
 	assert(node);
 
 	return node -> data != NULL;
@@ -379,6 +386,7 @@ Returns
 The number of elements in the dictionnary.
 */
 size_t get_dic_size(RadixDic* dic){
+
 	assert(dic);
 	
 	return dic -> size;
@@ -396,6 +404,7 @@ Returns
 The length of the key of maximal length.
 */
 size_t get_dic_max_length(RadixDic* dic){
+
 	assert(dic);
 
 	return dic -> maxWordLength;
@@ -403,6 +412,7 @@ size_t get_dic_max_length(RadixDic* dic){
 
 static void add_data_recursively(Node* currNode, void** datas, 
 								 size_t* currIndex){
+
 	if(!currNode)
 		return;
 
@@ -430,6 +440,9 @@ duplicated, NULL in case of allocation failure. The array returned is of size
 dic -> size.
 */
 void** get_all_data(RadixDic* dic){
+
+	assert(dic);
+	
 	void** datas = malloc(dic -> size * sizeof(void*));
 	
 	if(!datas)

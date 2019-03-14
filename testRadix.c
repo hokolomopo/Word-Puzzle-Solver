@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include "solver.h"
 
 int main(){
 	RadixDic* dic = create_empty_dictionnary();
