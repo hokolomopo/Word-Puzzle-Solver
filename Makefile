@@ -8,12 +8,12 @@ CC=gcc
 CFLAGS=--std=c99 --pedantic -Wall -W -Wmissing-prototypes -DNDEBUG
 LDFLAGS=
 
-SRC=radix.c solver.c
-OBJ=$(SRCS:.c=.o)
+SRC=radix.c wordPuzzle.c solver.c
+OBJ=$(SRC:.c=.o)
 
 EXEC=solver
 
-all:$(EXEC)
+all: $(EXEC)
 
 $(EXEC): $(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
@@ -28,5 +28,5 @@ mrproper: clean
 	@rm -rf $(EXEC)
 
 run:
-	./$(EXEC)
+	./$(EXEC) words.txt grid_2x2.txt
 

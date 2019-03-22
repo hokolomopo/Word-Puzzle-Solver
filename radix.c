@@ -86,7 +86,7 @@ Returns
 -------
 An empty dictionnary, or NULL in case allocation failed.
 */
-RadixDic* create_empty_dictionnary(){
+RadixDic* create_empty_dictionnary(void){
 
 	RadixDic* dic = malloc(sizeof(RadixDic));
 
@@ -134,9 +134,11 @@ data: The data to insert, the user should insert a copy of the data as those
 
 Returns
 -------
-void
+A boolean indicating if all went well or not.
 */
-void insert(RadixDic* dic, char* key, void* data){
+
+//TODO: return false en cas d'erreur
+bool insert(RadixDic* dic, char* key, void* data){
 
 	assert(dic);
 	assert(key);
@@ -211,6 +213,8 @@ void insert(RadixDic* dic, char* key, void* data){
 
 		dic -> size++;
 	}
+
+	return true;
 }
 
 /**

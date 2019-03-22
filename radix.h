@@ -6,8 +6,6 @@
 typedef struct RadixDic_t RadixDic;
 typedef struct Node_t Node;
 
-void print_dic(RadixDic* dic);
-
 /**
 Create an empty dictionnary.
 
@@ -19,7 +17,7 @@ Returns
 -------
 An empty dictionnary, or NULL in case allocation failed.
 */
-RadixDic* create_empty_dictionnary();
+RadixDic* create_empty_dictionnary(void);
 
 /**
 Deallocate a dictionnary.
@@ -48,7 +46,7 @@ Returns
 -------
 void
 */
-void insert(RadixDic* dic, char* key, void* data);
+bool insert(RadixDic* dic, char* key, void* data);
 
 /**
 Indicate if a given word key is in a given dictionnary.
