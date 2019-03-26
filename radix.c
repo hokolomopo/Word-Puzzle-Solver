@@ -20,6 +20,10 @@ struct Node_t{
 	char symbol;
 };
 
+char get_node_symbol(Node* node){
+	return node -> symbol;
+}
+
 /**
 Create a node containing a given symbol.
 
@@ -147,6 +151,8 @@ bool insert(RadixDic* dic, char* key, void* data){
 	char symbol;
 
 	size_t wordLength = strlen(key);
+	if(wordLength == 0)
+		return false;
 
 	if(wordLength > dic -> maxWordLength)
 		dic -> maxWordLength = wordLength;
@@ -164,16 +170,20 @@ bool insert(RadixDic* dic, char* key, void* data){
 
 		if(!currNode){
 			currNode = create_node(symbol);
+			if(!currNode)
+				return false;
 			prevNode -> middleSon = currNode;
 		}
 
-		while(currNode){
+		while(true){
 			if(symbol < currNode -> symbol){
 				prevNode = currNode;
 				currNode = currNode -> leftSon;
 
 				if(!currNode){
 					currNode = create_node(symbol);
+					if(!currNode)
+						return false;
 					prevNode -> leftSon = currNode;
 				}
 			}
@@ -184,6 +194,8 @@ bool insert(RadixDic* dic, char* key, void* data){
 
 				if(!currNode){
 					currNode = create_node(symbol);
+					if(!currNode)
+						return false;
 					prevNode -> rightSon = currNode;
 				}
 			}
@@ -195,7 +207,6 @@ bool insert(RadixDic* dic, char* key, void* data){
 				break;
 			}
 		}
-
 	}
 
 	if(currNode){

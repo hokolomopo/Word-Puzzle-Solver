@@ -1,4 +1,6 @@
 #include "wordPuzzle.h"
+#include "loader.h"
+#include "radix.h"
 #include <stdio.h>
 
 int main(int argc, char* argv[]){
@@ -7,11 +9,17 @@ int main(int argc, char* argv[]){
 		return 0;
 	}
 
-	RadixDic* wordDic = load_dic_from_file(argv[1], true);
+	RadixDic* wordDic = load_dic_from_file(argv[1], false);
 	if(!wordDic){
 		fprintf(stderr, "error");
 		return 0;
 	}
+	/*
+	char** words = (char**)(get_all_data(wordDic));
+	for(size_t i = 0; i < get_dic_size(wordDic); i++){
+		fprintf(stderr, "dumped = %s\n", words[i]);
+	}
+	*/
 
 	size_t gridSize;
 	char*** grid = load_grid_from_file(argv[2], &gridSize);
@@ -19,7 +27,7 @@ int main(int argc, char* argv[]){
 		fprintf(stderr, "error");
 		return 0;
 	}
-
+	
 	size_t returnLength;
 	char** foundWords = solve(grid, gridSize, wordDic, &returnLength);
 	if(!foundWords || returnLength == 0){

@@ -6,158 +6,7 @@
 #include <stdbool.h>
 #include "radix.h"
 #include "wordPuzzle.h"
-
-static const char LINE_DELIM = '\n';
-static const char WORD_DELIM = ' ';
-static const char NOT_SPECIAL_CHAR = 'c';
-
-static const size_t MAX_WORD_LENGTH = 30;
-static const size_t SIZE_STEP_DIC = 700;
-
-static const size_t MAX_TILE_SIZE = 10;
-
-static const unsigned int SEED = 11;
-
-char* strdup(const char* src){
-	size_t size;
-	for(size = 0; src[size] != '\0'; size++);
-
-	char* dest = malloc(size + 1 * sizeof(char));
-	if(!dest)
-		return NULL;
-
-	strcpy(dest, src);
-
-	return dest;
-}
-
-char*** load_grid_from_file(const char* fileName, size_t* gridSize){
-	//Open file
-	FILE* fp = fopen(fileName, "r");
-	if(!fp)
-		return NULL;
-
-	//Check grid size
-	*gridSize = 1;
-	char read = fgetc(fp);
-	
-	while(read != LINE_DELIM){
-		if(read == EOF)
-			return NULL;
-
-		if(read == WORD_DELIM)
-			(*gridSize)++;
-		read = fgetc(fp);
-	}
-
-	//Allocate grid
-	char*** grid = malloc(sizeof(char**));
-	if(!grid)
-		return NULL;
-
-	for(size_t i = 0; i < *gridSize; i++){
-		grid[i] = malloc(sizeof(char*));
-		if(!grid[i])
-			return NULL;
-	}
-
-	//Fill grid
-	rewind(fp);
-
-	//To not be a special char
-	read = NOT_SPECIAL_CHAR;
-	for(size_t i = 0; i < *gridSize; i++){
-		for(size_t j = 0; j < *gridSize; j++){
-			grid[i][j] = malloc(MAX_TILE_SIZE * sizeof(char));
-			if(!grid[i][j])
-				return NULL;
-			
-			size_t k ;
-			read = getc(fp);
-			for(k = 0; read != WORD_DELIM && read != LINE_DELIM; k++){
-				if(read == EOF)
-					return NULL;
-
-				grid[i][j][k] = read;
-
-				read = getc(fp);
-			}
-			grid[i][j][k] = '\0';
-		}
-
-		if(read != LINE_DELIM)
-			return NULL;
-
-	}
-
-	return grid;
-}
-
-RadixDic* load_dic_from_file(const char* fileName, bool random){
-	//Open file
-	FILE* fp = fopen(fileName, "r");
-	if(!fp)
-		return NULL;
-
-	RadixDic* dic = create_empty_dictionnary();
-
-	srand(SEED);
-
-	size_t bufferSize = SIZE_STEP_DIC;
-	char** buffer = malloc(bufferSize * sizeof(char*));
-	if(!buffer)
-		return NULL;
-
-	// To not be EOF
-	char read = NOT_SPECIAL_CHAR;
-
-	size_t nbWords;
-	for(nbWords = 0; read != EOF; nbWords++){
-		char* data = malloc(MAX_WORD_LENGTH + 1 * sizeof(char));
-		if(!data)
-			return NULL;
-
-		read = fgetc(fp);
-		size_t i;
-		for(i = 0; read != LINE_DELIM && read != EOF; i++){
-			data[i] = read;
-			read = fgetc(fp);
-		}
-		data[i] = '\0';
-
-		if(random){
-			if(nbWords >= bufferSize){
-				bufferSize += SIZE_STEP_DIC;
-				if(!realloc(buffer, bufferSize * sizeof(char*)))
-					return NULL;
-
-			}
-			buffer[nbWords] = data;
-		}
-		else
-			insert(dic, data, data);
-	}
-
-	if(random){
-		size_t nbWordsToInsert = nbWords;
-		
-		size_t indicesToInsert[nbWords];
-
-		for(size_t i = 0; i < nbWords; i++){
-			indicesToInsert[i] = i;
-		}
-
-		size_t insertIndex;
-		for(size_t i = 0; i < nbWords; i++){
-			insertIndex = rand()%nbWordsToInsert;
-			insert(dic, buffer[indicesToInsert[insertIndex]],
-				   buffer[indicesToInsert[insertIndex]]);
-			indicesToInsert[insertIndex] = indicesToInsert[--nbWordsToInsert];
-		}
-	}
-
-	return dic;
-}
+#include "loader.h"
 
 /*
 static size_t* size_t_memdup(size_t* src, size_t length){
@@ -176,12 +25,14 @@ static size_t index_1D(size_t firstIndex, size_t secondIndex, size_t length){
 	return firstIndex * length + secondIndex;
 }
 
+// TODO: enlever les return true car plus de false
 bool solve_recursive(char*** grid, size_t gridLength, size_t i, size_t j, 
 					 Node* currNode, RadixDic* foundDic, size_t* passedThrough, 
 					 size_t notPassedValue, size_t iteration, 
 					 size_t maxWordLength){
+	//fprintf(stderr, "i = %ld, j = %ld\n", i, j);
 
-	if(iteration > maxWordLength)
+	if(iteration >= maxWordLength)
 		return true;
 
 	size_t tile = index_1D(i, j, gridLength);
@@ -199,14 +50,17 @@ bool solve_recursive(char*** grid, size_t gridLength, size_t i, size_t j,
 		nextNode = next_node(nextNode, grid[i][j][k]);
 	}
 
-	if(!nextNode)
+	if(!nextNode){
+		passedThrough[iteration] = notPassedValue;
 		return true;
+	}
 
 	if(is_terminal(nextNode)){
 		char* word = (char*)get_node_data(nextNode);
 		char* key = strdup(word);
 		char* data = strdup(word);
 
+		//fprintf(stderr, "inserted %s, symbol = %c\n", data, get_node_symbol(nextNode));
 		insert(foundDic, data, data);
 
 		free(key);
@@ -292,6 +146,13 @@ char** solve(char*** grid, size_t gridLength, RadixDic* wordDic,
 		}
 	}
 
+	/*
+	for(size_t i = 0;  i < gridLength; i++){
+		for(size_t j = 0; j < gridLength; j++)
+			fprintf(stderr, "grid[%ld][%ld] = %s\n", i, j, grid[i][j]);
+	}
+	*/
+
 	assert(wordDic);
 	assert(returnLength);
 
@@ -300,7 +161,8 @@ char** solve(char*** grid, size_t gridLength, RadixDic* wordDic,
 	if(!foundDic)
 		return NULL;
 
-	size_t* passedThrough = malloc(get_dic_max_length(wordDic) * sizeof(size_t));
+	size_t maxWordLength = get_dic_max_length(wordDic);
+	size_t* passedThrough = malloc(maxWordLength * sizeof(size_t));
 
 	if(!passedThrough)
 		return NULL;
@@ -308,15 +170,16 @@ char** solve(char*** grid, size_t gridLength, RadixDic* wordDic,
 	size_t notPassedValue = gridLength * gridLength + 1;
 	
 	// Prevent passed through to be intialized with valid indices.
-	for(size_t i = 0; i < get_dic_max_length(wordDic); i++){
+	for(size_t i = 0; i < maxWordLength; i++){
 		passedThrough[i] = notPassedValue;
 	}
 
 	for(size_t i = 0; i < gridLength; i++){
 		for(size_t j = 0; j < gridLength; j++){
+			//fprintf(stderr, "%s\n", grid[i][j]);
 			if(!solve_recursive(grid, gridLength, i, j, get_root(wordDic), 
 								foundDic, passedThrough, notPassedValue, 0, 
-								get_dic_max_length(wordDic))){
+								maxWordLength)){
 
 				delete_dictionnary(foundDic);
 				free(passedThrough);

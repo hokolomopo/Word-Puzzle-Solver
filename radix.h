@@ -6,6 +6,9 @@
 typedef struct RadixDic_t RadixDic;
 typedef struct Node_t Node;
 
+
+char get_node_symbol(Node* node);
+
 /**
 Create an empty dictionnary.
 
