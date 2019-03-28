@@ -6,12 +6,14 @@
 
 static char NULL_SYMBOL = '\0';
 
+// Structure representing a dictionnary organised with radix search.
 struct RadixDic_t{
 	Node* root;
 	size_t size;
 	size_t maxWordLength;
 };
 
+// Structure representing a node of a RadixDic_t.
 struct Node_t{
 	Node* leftSon;
 	Node* middleSon;
@@ -20,6 +22,17 @@ struct Node_t{
 	char symbol;
 };
 
+/**
+Get the symbol of a given node.
+
+Parameters
+----------
+node: The node from which to get the symbol.
+
+Returns
+-------
+The symbol associated to the node.
+*/
 char get_node_symbol(Node* node){
 	return node -> symbol;
 }
@@ -65,8 +78,10 @@ void
 */
 static void delete_node_subtree(Node* node){
 
+	// Free this node's data
 	free(node -> data);
 
+	// Free the rest if the tree recursively
 	if(node -> leftSon)
 		delete_node_subtree(node -> leftSon);
 	
@@ -76,6 +91,7 @@ static void delete_node_subtree(Node* node){
 	if(node -> rightSon)
 		delete_node_subtree(node -> rightSon);
 
+	// Free the current node
 	free(node);
 }
 
@@ -140,34 +156,42 @@ Returns
 -------
 A boolean indicating if all went well or not.
 */
-
-//TODO: return false en cas d'erreur
 bool insert(RadixDic* dic, char* key, void* data){
 
+	// Assert inputs
 	assert(dic);
 	assert(key);
 	assert(data);
 	
 	char symbol;
 
+	// Check if the word is valid
 	size_t wordLength = strlen(key);
 	if(wordLength == 0)
 		return false;
 
+	// Update dictionnary maxWordLengh component
 	if(wordLength > dic -> maxWordLength)
 		dic -> maxWordLength = wordLength;
 
+	// If the dictionary is empty, initialize the root
 	if(!dic -> root){
 		Node* newNode = create_node(key[0]);
 		dic -> root = newNode;
 	}
 
+	// Find the node insertion place
 	Node* currNode = dic -> root;
 	Node* prevNode = currNode;
 
 	for(size_t i = 0; key[i] != '\0'; i++){
 		symbol = key[i];
 
+		/*
+		If the current node is not valid, it means we found a node with the
+		previous symbol at previous iteration and this node has no middle 
+		child node, we thus insert a new node with the current symbol.
+		*/
 		if(!currNode){
 			currNode = create_node(symbol);
 			if(!currNode)
@@ -175,11 +199,17 @@ bool insert(RadixDic* dic, char* key, void* data){
 			prevNode -> middleSon = currNode;
 		}
 
+		// Search for the current symbol
 		while(true){
+
+			// If searched symbol is higher than the symbol of the current node
+			// search on the right subtree.
 			if(symbol < currNode -> symbol){
 				prevNode = currNode;
 				currNode = currNode -> leftSon;
 
+				// If there is no right subtree, then the searched node doesn't
+				// exit, we create it
 				if(!currNode){
 					currNode = create_node(symbol);
 					if(!currNode)
@@ -188,10 +218,14 @@ bool insert(RadixDic* dic, char* key, void* data){
 				}
 			}
 
+			// If searched symbol is lower than the symbol of the current node
+			// search on the left subtree.
 			else if (symbol > currNode -> symbol){
 				prevNode = currNode;
 				currNode = currNode -> rightSon;
 
+				// If there is no left subtree, then the searched node doesn't
+				// exit, we create it
 				if(!currNode){
 					currNode = create_node(symbol);
 					if(!currNode)
@@ -200,6 +234,7 @@ bool insert(RadixDic* dic, char* key, void* data){
 				}
 			}
 
+			// Found the searched node, follow the middle subtree.
 			else{
 				prevNode = currNode;
 				currNode = currNode -> middleSon;
@@ -209,6 +244,7 @@ bool insert(RadixDic* dic, char* key, void* data){
 		}
 	}
 
+	// If the reached node exist, add the data to it.
 	if(currNode){
 		if(!currNode -> data)
 			dic -> size ++;
@@ -216,6 +252,7 @@ bool insert(RadixDic* dic, char* key, void* data){
 		currNode -> data = data;
 	}
 
+	// If the reached node doesn't exist, create a NULL node holding the data
 	else{
 		Node* newNode = create_node(NULL_SYMBOL);
 		newNode -> data = data;

@@ -12,8 +12,8 @@ static const char WORD_DELIM = ' ';
 static const char NOT_SPECIAL_CHAR = 'c';
 
 static const size_t MAX_WORD_LENGTH = 30;
-// TODO: gérer problème realloc
-static const size_t SIZE_STEP_DIC = 110000;
+
+static const size_t SIZE_STEP_DIC = 500;
 
 static const size_t MAX_TILE_SIZE = 11;
 
@@ -38,7 +38,7 @@ char*** load_grid_from_file(const char* fileName, size_t* gridSize){
 	if(!fp)
 		return NULL;
 
-	//Check grid size
+	// Set grid size
 	*gridSize = 1;
 	char read = fgetc(fp);
 	
@@ -92,6 +92,8 @@ char*** load_grid_from_file(const char* fileName, size_t* gridSize){
 
 	}
 
+	fclose(fp);
+
 	/*
 	for(size_t i = 0; i < *gridSize; i++){	
 		for(size_t j = 0; j < *gridSize; j++){
@@ -121,7 +123,9 @@ RadixDic* load_dic_from_file(const char* fileName, bool random){
 	srand(SEED);
 
 	size_t bufferSize = SIZE_STEP_DIC;
-	char** buffer = malloc(bufferSize * sizeof(char*));
+
+	// Initialize it with NULL to avoid failures on free for unused slots.
+	char** buffer = calloc(bufferSize, sizeof(char*));
 	if(!buffer)
 		return NULL;
 
@@ -135,8 +139,10 @@ RadixDic* load_dic_from_file(const char* fileName, bool random){
 			return NULL;
 
 		read = fgetc(fp);
-		if(read == EOF)
+		if(read == EOF){
+			free(data);
 			break;
+		}
 
 		size_t i;
 		for(i = 0; read != LINE_DELIM && read != EOF; i++){
@@ -177,6 +183,12 @@ RadixDic* load_dic_from_file(const char* fileName, bool random){
 			indicesToInsert[insertIndex] = indicesToInsert[--nbWordsToInsert];
 		}
 	}
+
+	for(size_t i = 0; i < bufferSize; i++)
+		free(buffer[i]);
+
+	fclose(fp);
+	free(buffer);
 
 	return dic;
 }

@@ -3,10 +3,23 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+// Structure representing a dictionnary organised with radix search.
 typedef struct RadixDic_t RadixDic;
+
+// Structure representing a node of a RadixDic.
 typedef struct Node_t Node;
 
+/**
+Get the symbol of a given node.
 
+Parameters
+----------
+node: The node from which to get the symbol.
+
+Returns
+-------
+The symbol associated to the node.
+*/
 char get_node_symbol(Node* node);
 
 /**

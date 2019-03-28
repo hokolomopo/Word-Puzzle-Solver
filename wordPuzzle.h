@@ -4,11 +4,22 @@
 #include "radix.h"
 #include <stddef.h>
 
-bool solve_recursive(char*** grid, size_t gridLength, size_t i, size_t j, 
-							Node* currNode, RadixDic* foundDic, 
-							size_t* passedThrough, size_t notPassedValue, 
-							size_t iteration, size_t maxWordLength);
+/**
+Solve a grid.
 
+Parameters
+----------
+grid: The grid to solve. The grid must be squared a matrix of strings.
+length: The size of the matrix.
+wordDic: A dictionnary containing all the existing words.
+returnLength: A pointer to a size_t that will be modified by the function to be
+			  the size of the returned array.
+
+Returns
+-------
+An array of strings containing the words found. NULL in case no word found or
+allocation failure.
+*/
 char** solve(char*** grid, size_t gridLength, RadixDic* wordDic, 
 			 size_t* returnLength);
 
