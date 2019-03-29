@@ -56,7 +56,7 @@ DEFAULT_DIC_SIZE = 50000
 DEFAULT_WORD_LENGTH = 10
 DEFAULT_GRID_WORD_LENGTH = 1
 
-PROBA_BLANCS = [0.5 * x for x in range(20)]
+PROBA_BLANCS = [0.05 * x for x in range(21)]
 WORD_LENGTHS = [5 * x for x in range(1, 11)]
 WORD_GRID_LENGTH = [x for x in range(1, 11)]
 DIC_SIZES = [10000 * x for x in range(1, 11)]
@@ -78,40 +78,46 @@ def generate_files():
 	except:
 		pass
 
+	print("generating dic size")
 	for dicSize in DIC_SIZES:
 		generate_dictionnary("dics/dic_size_{}.txt".format(dicSize), dicSize, DEFAULT_WORD_LENGTH)
 		generate_dictionnary("dics/sorted_dic_size_{}.txt".format(dicSize), dicSize, DEFAULT_WORD_LENGTH, True)
 
+	print("generating grid size")
 	for gridSize in GRID_SIZES:
 		generate_grid("grids/grid_size_{}.txt".format(gridSize), gridSize, DEFAULT_GRID_WORD_LENGTH)
 
+	print("generating word length")
 	for wordLength in WORD_LENGTHS:
 		generate_dictionnary("dics/dic_word_{}.txt".format(wordLength), DEFAULT_DIC_SIZE, wordLength)
 
+	print("generating grid word length")
 	for wordGridLength in WORD_GRID_LENGTH:
 		generate_grid("grids/grid_word_{}.txt".format(wordGridLength), DEFAULT_GRID_SIZE, wordGridLength)
 
+	print("generating proba blanc")
 	for blancProba in PROBA_BLANCS:
-		generate_grid("grids/grid_blanc_{}".format(blancProba), DEFAULT_GRID_SIZE, DEFAULT_GRID_WORD_LENGTH, 
+		generate_grid("grids/grid_blanc_{}".format(int(blancProba*100)), DEFAULT_GRID_SIZE, DEFAULT_GRID_WORD_LENGTH, 
 					  blancSymbol = True, probaBlanc = blancProba)
 
 
 	computationToMake = []
 
+	print("writing grids")
 	for dicSize in DIC_SIZES:
 		computationToMake.append("grids/grid_size_{}.txt dics/dic_size_{}.txt\n".format(DEFAULT_GRID_SIZE, dicSize))
 
 	for gridSize in GRID_SIZES:
 		computationToMake.append("grids/grid_size_{}.txt dics/dic_size_{}.txt\n".format(gridSize, DEFAULT_DIC_SIZE))
-
+	
 	for wordLength in WORD_LENGTHS:
-		computationToMake.append("grids/grid_size_{}.txt dics/dic_word_{}.txt\n".format(DEFAULT_DIC_SIZE, wordLength))
+		computationToMake.append("grids/grid_size_{}.txt dics/dic_word_{}.txt\n".format(DEFAULT_GRID_SIZE, wordLength))
 
 	for wordGridLength in WORD_GRID_LENGTH:
 		computationToMake.append("grids/grid_word_{}.txt dics/dic_size_{}.txt\n".format(wordGridLength, DEFAULT_DIC_SIZE))
 
 	for blancProba in PROBA_BLANCS:
-		computationToMake.append("grids/grid_blanc_{}.txt dics/dic_size_{}.txt\n".format(blancProba, DEFAULT_DIC_SIZE))
+		computationToMake.append("grids/grid_blanc_{}.txt dics/dic_size_{}.txt\n".format(int(blancProba*100), DEFAULT_DIC_SIZE))
 
 	with open("plots/toTest.txt", "w") as fp:
 		for computation in computationToMake:
@@ -120,10 +126,12 @@ def generate_files():
 	fp.close()
 
 def run_timer():
+	print("executing")
 	os.system("gcc timer.c radix.c wordPuzzle.c loader.c -o timer")
 	os.system("./timer")
 
 def make_graphs():
+	print("plotting")
 	dicSizeTime = []
 	gridSizeTime = []
 	wordLengthTime = []
@@ -181,8 +189,8 @@ def make_graphs():
 	plt.close()
 
 def make_estimations():
-	#generate_files()
-	#run_timer()
+	generate_files()
+	run_timer()
 	make_graphs()
 
 if __name__ == "__main__":

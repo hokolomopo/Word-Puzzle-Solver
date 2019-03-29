@@ -11,7 +11,7 @@ int main(int argc, char* argv[]){
 		return 0;
 	}
 
-	RadixDic* wordDic = load_dic_from_file(argv[1], false);
+	RadixDic* wordDic = load_dic_from_file(argv[1], true);
 	if(!wordDic){
 		fprintf(stderr, "error");
 		return 0;

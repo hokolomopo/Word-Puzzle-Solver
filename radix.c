@@ -157,7 +157,10 @@ Returns
 A boolean indicating if all went well or not.
 */
 bool insert(RadixDic* dic, char* key, void* data){
-
+	/*
+	if(strcmp(key, "G") == 0)
+		fprintf(stderr, "insert\n");
+		*/
 	// Assert inputs
 	assert(dic);
 	assert(key);
@@ -185,6 +188,10 @@ bool insert(RadixDic* dic, char* key, void* data){
 	Node* prevNode = currNode;
 
 	for(size_t i = 0; key[i] != '\0'; i++){
+		/*
+		if(strcmp(key, "G") == 0)
+			fprintf(stderr, "insert iteration = %ld\n", i);
+			*/
 		symbol = key[i];
 
 		/*
@@ -193,6 +200,10 @@ bool insert(RadixDic* dic, char* key, void* data){
 		child node, we thus insert a new node with the current symbol.
 		*/
 		if(!currNode){
+			/*
+			if(strcmp(key, "G") == 0)
+				fprintf(stderr, "create middle node = %c\n", symbol);
+				*/
 			currNode = create_node(symbol);
 			if(!currNode)
 				return false;
@@ -201,7 +212,10 @@ bool insert(RadixDic* dic, char* key, void* data){
 
 		// Search for the current symbol
 		while(true){
-
+			/*
+			if(strcmp(key, "G") == 0)
+				fprintf(stderr, "curr node = %c\n", currNode -> symbol);
+				*/
 			// If searched symbol is higher than the symbol of the current node
 			// search on the right subtree.
 			if(symbol < currNode -> symbol){
@@ -212,6 +226,10 @@ bool insert(RadixDic* dic, char* key, void* data){
 				// exit, we create it
 				if(!currNode){
 					currNode = create_node(symbol);
+					/*
+					if(strcmp(key, "G") == 0)
+						fprintf(stderr, "create left node %c\n", symbol);
+						*/
 					if(!currNode)
 						return false;
 					prevNode -> leftSon = currNode;
@@ -228,6 +246,10 @@ bool insert(RadixDic* dic, char* key, void* data){
 				// exit, we create it
 				if(!currNode){
 					currNode = create_node(symbol);
+					/*
+					if(strcmp(key, "G") == 0)
+						fprintf(stderr, "create right node %c\n", symbol);
+						*/
 					if(!currNode)
 						return false;
 					prevNode -> rightSon = currNode;
@@ -236,6 +258,10 @@ bool insert(RadixDic* dic, char* key, void* data){
 
 			// Found the searched node, follow the middle subtree.
 			else{
+				/*
+				if(strcmp(key, "G") == 0)
+						fprintf(stderr, "found\n");
+						*/
 				prevNode = currNode;
 				currNode = currNode -> middleSon;
 
@@ -246,6 +272,10 @@ bool insert(RadixDic* dic, char* key, void* data){
 
 	// If the reached node exist, add the data to it.
 	if(currNode){
+		/*
+		if(strcmp(key, "G") == 0)
+			fprintf(stderr, "node %c data %s\n", currNode -> symbol, (char*)data);
+			*/
 		if(!currNode -> data)
 			dic -> size ++;
 
@@ -283,7 +313,7 @@ static Node* get_corresponding_node(RadixDic* dic, char* key){
 	Node* currNode = dic -> root;
 
 	for(size_t i = 0; key[i] != '\0' && currNode; i++)
-		currNode = next_node(currNode, key[i]);
+		currNode = next_node(currNode, key[i], false);
 
 	return currNode;
 }
@@ -370,11 +400,13 @@ Returns
 The next node if there exist word in the dictionnary with this symbol as next 
 symbol, NULL otherwise. 
 */
-Node* next_node(Node* currNode, char symbol){
+Node* next_node(Node* currNode, char symbol, bool debug){
 
 	assert(currNode);
 
 	while(currNode){
+		if(debug)
+			fprintf(stderr, "currNode = %c\n", currNode -> symbol);
 
 		if(symbol < currNode -> symbol)
 			currNode = currNode -> leftSon;

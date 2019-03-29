@@ -54,13 +54,16 @@ The data associated to the key, NULL of the key is not in the dictionnary.
 static void solve_recursive(char*** grid, size_t gridLength, size_t i, size_t j, 
 					 		Node* currNode, RadixDic* foundDic, 
 					 		size_t* passedThrough, size_t notPassedValue, 
-					 		size_t iteration, size_t maxWordLength){
+					 		size_t iteration, size_t maxWordLength, bool debug){
 	//fprintf(stderr, "i = %ld, j = %ld\n", i, j);
 
 	// We are searching for words longer that the longest word in the 
 	// dictionnary -> stop searching.
 	if(iteration >= maxWordLength)
 		return;
+
+	if(debug)
+		fprintf(stderr, "iteration = %ld\n", iteration);
 
 	// Check if we already visited that position.
 	size_t tile = index_1D(i, j, gridLength);
@@ -77,7 +80,9 @@ static void solve_recursive(char*** grid, size_t gridLength, size_t i, size_t j,
 	for(size_t k = 0; grid[i][j][k] != '\0'; k++){
 		if(!nextNode)
 			break;
-		nextNode = next_node(nextNode, grid[i][j][k]);
+		nextNode = next_node(nextNode, grid[i][j][k], debug);
+		if(debug && nextNode)
+			fprintf(stderr, "found %c\n", get_node_symbol(nextNode));
 	}
 
 	// If nextNode is NULL, no words in the dictionnary correspond to current 
@@ -89,56 +94,53 @@ static void solve_recursive(char*** grid, size_t gridLength, size_t i, size_t j,
 
 	// If nextNode is terminal, we have found a valid word.
 	if(is_terminal(nextNode)){
-		char* word = (char*)get_node_data(nextNode);
-		char* key = strdup(word);
-		char* data = strdup(word);
+		char* data = strdup((char*)get_node_data(nextNode));
 
-		//fprintf(stderr, "inserted %s, symbol = %c\n", data, get_node_symbol(nextNode));
+		if(debug)
+			fprintf(stderr, "inserted %s, symbol = %c\n", data, get_node_symbol(nextNode));
 		insert(foundDic, data, data);
-
-		free(key);
 	}
 
 	//Try to extend the current word with all adjacent tiles.
 	if(i > 0)
 		solve_recursive(grid, gridLength, i - 1, j, nextNode, foundDic, 
 						passedThrough, notPassedValue, iteration + 1, 
-						maxWordLength);
+						maxWordLength, debug);
 	
 	if(i < gridLength - 1)
 		solve_recursive(grid, gridLength, i + 1, j, nextNode, foundDic, 
 						passedThrough, notPassedValue, iteration + 1, 
-						maxWordLength);
+						maxWordLength, debug);
 
 	if(j > 0)
 		solve_recursive(grid, gridLength, i, j - 1, nextNode, foundDic, 
 						passedThrough, notPassedValue, iteration + 1, 
-						maxWordLength);
+						maxWordLength, debug);
 	
 	if(j < gridLength - 1)
 		solve_recursive(grid, gridLength, i, j + 1, nextNode, foundDic, 
 						passedThrough, notPassedValue, iteration + 1, 
-						maxWordLength);
+						maxWordLength, debug);
 
 	if(i > 0 && j > 0)
 		solve_recursive(grid, gridLength, i - 1, j - 1, nextNode, foundDic, 
 						passedThrough, notPassedValue, iteration + 1, 
-						maxWordLength);
+						maxWordLength, debug);
 
 	if(i > 0 && j < gridLength - 1)
 		solve_recursive(grid, gridLength, i - 1, j + 1, nextNode, foundDic, 
 						passedThrough, notPassedValue, iteration + 1, 
-						maxWordLength);
+						maxWordLength, debug);
 
 	if(i < gridLength - 1 && j > 0)
 		solve_recursive(grid, gridLength, i + 1, j - 1, nextNode, foundDic, 
 						passedThrough, notPassedValue, iteration + 1, 
-						maxWordLength);
+						maxWordLength, debug);
 
 	if(i < gridLength - 1 && j < gridLength - 1)
 		solve_recursive(grid, gridLength, i + 1, j + 1, nextNode, foundDic, 
 						passedThrough, notPassedValue, iteration + 1, 
-						maxWordLength);
+						maxWordLength, debug);
 
 	// Indicate we have finished visiting this position to let other recursive
 	// calls pass thorugh it.
@@ -163,7 +165,10 @@ allocation failure.
 */
 char** solve(char*** grid, size_t gridLength, RadixDic* wordDic, 
 			 size_t* returnLength){
-
+	/*
+	if(is_key_in_dic(wordDic, "G"))
+		fprintf(stderr, "G in wordDic\n");
+		*/
 	// Check if the grid is valid
 	assert(grid);
 	for(size_t i = 0; i < gridLength; i++){
@@ -208,15 +213,26 @@ char** solve(char*** grid, size_t gridLength, RadixDic* wordDic,
 	}
 
 	// Solve the grid
+	bool debug = false;
 	for(size_t i = 0; i < gridLength; i++){
 		for(size_t j = 0; j < gridLength; j++){
-			//fprintf(stderr, "%s\n", grid[i][j]);
+			debug = false;
+			/*
+			if(strcmp(grid[i][j], "G") == 0 && i == 2 && j == 0)
+				debug = true;
+				*/
 			solve_recursive(grid, gridLength, i, j, get_root(wordDic), 
 								foundDic, passedThrough, notPassedValue, 0, 
-								maxWordLength);
+								maxWordLength, debug);
+			if(debug && is_key_in_dic(foundDic, "G"))
+				fprintf(stderr, "G in foundDic after solve\n");
 		}
 	}
 
+	/*
+	if(is_key_in_dic(foundDic, "G"))
+		fprintf(stderr, "G in foundDic\n");
+		*/
 	// Retrieve the words from the dictionnary of found words.
 	char** words = (char**)(get_all_data(foundDic));
 	*returnLength = get_dic_size(foundDic);

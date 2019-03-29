@@ -76,7 +76,6 @@ Returns
 -------
 A boolean indicating if the word is in the dictionnary.
 */
-bool is_key_in_dic(RadixDic* dic, char* key);
 
 /**
 Retrieve the data associated to a given key
@@ -92,6 +91,20 @@ Returns
 The data associated to the key, NULL of the key is not in the dictionnary.
 */
 void* get_data(RadixDic* dic, char* key);
+
+/**
+Indicate if a given word key is in a given dictionnary.
+
+Parameters
+----------
+dic: The dictionnary in which to search the key.
+key: The key to search.
+
+Returns
+-------
+A boolean indicating if the word is in the dictionnary.
+*/
+bool is_key_in_dic(RadixDic* dic, char* key);
 
 /**
 Get the root node of a radix dictionnary.
@@ -119,7 +132,7 @@ Returns
 The next node if there exist word in the dictionnary with this symbol as next 
 symbol, NULL otherwise. 
 */
-Node* next_node(Node* currNode, char symbol);
+Node* next_node(Node* currNode, char symbol, bool debug);
 
 /**
 Indicate whether a node is terminal, i.e. represent the end of a word in the

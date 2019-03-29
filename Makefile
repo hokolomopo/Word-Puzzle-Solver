@@ -29,5 +29,5 @@ mrproper: clean
 	@rm -rf $(EXEC)
 
 run: $(EXEC)
-	./$(EXEC) words.txt test_grid.txt
+	./$(EXEC) test_dic.txt test_grid.txt
 

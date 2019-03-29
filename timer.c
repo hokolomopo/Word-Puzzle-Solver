@@ -15,6 +15,7 @@ double test(char* dicFileName, char* gridFileName){
 
 	size_t gridSize;
 	RadixDic* wordDic = load_dic_from_file(dicFileName, true);
+
 	char*** grid = load_grid_from_file(gridFileName, &gridSize);
 
 	clock_t start = clock();
@@ -61,7 +62,6 @@ int main(){
 		read = fgetc(toTest);
 
 		dicName[i] = '\0';
-		
 		result = test(dicName, gridName);
 		fprintf(resultFile, "%lf\n", result);
 	}

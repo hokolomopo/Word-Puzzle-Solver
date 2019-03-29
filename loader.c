@@ -11,11 +11,7 @@ static const char LINE_DELIM = '\n';
 static const char WORD_DELIM = ' ';
 static const char NOT_SPECIAL_CHAR = 'c';
 
-static const size_t MAX_WORD_LENGTH = 30;
-
-static const size_t SIZE_STEP_DIC = 500;
-
-static const size_t MAX_TILE_SIZE = 11;
+static const size_t MAX_TILE_SIZE = 10;
 
 static const unsigned int SEED = 11;
 
@@ -35,8 +31,10 @@ char* strdup(const char* src){
 char*** load_grid_from_file(const char* fileName, size_t* gridSize){
 	//Open file
 	FILE* fp = fopen(fileName, "r");
-	if(!fp)
+	if(!fp){
+		fprintf(stderr, "fail open grid\n");
 		return NULL;
+	}
 
 	// Set grid size
 	*gridSize = 1;
@@ -115,26 +113,46 @@ char*** load_grid_from_file(const char* fileName, size_t* gridSize){
 RadixDic* load_dic_from_file(const char* fileName, bool random){
 	//Open file
 	FILE* fp = fopen(fileName, "r");
-	if(!fp)
+	if(!fp){
+		fprintf(stderr, "fail open dic\n");
 		return NULL;
+	}
 
 	RadixDic* dic = create_empty_dictionnary();
 
 	srand(SEED);
 
-	size_t bufferSize = SIZE_STEP_DIC;
-
-	// Initialize it with NULL to avoid failures on free for unused slots.
-	char** buffer = calloc(bufferSize, sizeof(char*));
-	if(!buffer)
-		return NULL;
-
 	// To not be EOF
 	char read = NOT_SPECIAL_CHAR;
 
+	size_t dicSize = 0;
+	size_t nbReadLine = 0;
+	size_t maxReadLine = 0;
+	while(read != EOF){
+		nbReadLine++;
+		if(read == '\n'){
+			if(nbReadLine > maxReadLine)
+				maxReadLine = nbReadLine;
+			nbReadLine = 0;
+			dicSize++;
+		}
+		read = fgetc(fp);
+	}
+	
+	dicSize++;
+	rewind(fp);
+	read = NOT_SPECIAL_CHAR;
+
+	char** buffer;
+	if(random){
+		buffer = malloc(dicSize * sizeof(char*));
+		if(!buffer)
+			return NULL;
+	}
+
 	size_t nbWords;
 	for(nbWords = 0; read != EOF; nbWords++){
-		char* data = malloc(MAX_WORD_LENGTH + 1 * sizeof(char));
+		char* data = malloc(maxReadLine + 1 * sizeof(char));
 		if(!data)
 			return NULL;
 
@@ -149,19 +167,18 @@ RadixDic* load_dic_from_file(const char* fileName, bool random){
 			data[i] = read;
 			read = fgetc(fp);
 		}
-		data[i] = '\0';
-
+		data[i] = '\0';;
 		if(random){
-			if(nbWords >= bufferSize){
-				bufferSize += SIZE_STEP_DIC;
-				if(!realloc(buffer, bufferSize * sizeof(char*)))
-					return NULL;
-
-			}
 			buffer[nbWords] = data;
 		}
+
 		else{
 			//fprintf(stderr, "inserted = %s\n", data);
+			/*
+			if(strcmp(data, "G") == 0)
+				fprintf(stderr, "insert G\n");
+				*/
+
 			insert(dic, data, data);
 		}
 	}
@@ -183,9 +200,6 @@ RadixDic* load_dic_from_file(const char* fileName, bool random){
 			indicesToInsert[insertIndex] = indicesToInsert[--nbWordsToInsert];
 		}
 	}
-
-	for(size_t i = 0; i < bufferSize; i++)
-		free(buffer[i]);
 
 	fclose(fp);
 	free(buffer);
