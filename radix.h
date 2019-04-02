@@ -3,203 +3,191 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-// Structure representing a dictionnary organised with radix search.
+// Structure representing a dictionary organised with radix search.
 typedef struct RadixDic_t RadixDic;
 
 // Structure representing a node of a RadixDic.
 typedef struct Node_t Node;
 
 /**
-Get the symbol of a given node.
-
-Parameters
-----------
-node: The node from which to get the symbol.
-
-Returns
--------
-The symbol associated to the node.
-*/
-char get_node_symbol(Node* node);
-
-/**
-Create an empty dictionnary.
-
-Parameters
-----------
-void
-
-Returns
--------
-An empty dictionnary, or NULL in case allocation failed.
-*/
-RadixDic* create_empty_dictionnary(void);
+ * Get the symbol of a given node.
+ *
+ * Parameters
+ * ----------
+ * node: The node from which to get the symbol.
+ *
+ * Returns
+ * -------
+ * The symbol associated to the node.
+ */
+char get_node_symbol(const Node* node);
 
 /**
-Deallocate a dictionnary.
-
-Parameters
-----------
-dic: The dictionnary to deallocate.
-
-Returns
--------
-void
-*/
-void delete_dictionnary(RadixDic* dic);
-
-/**
-Insert data with a given key in a dictionnary. If the key is already in the
-dictionnary, it erases previous content to put new data.
-
-Parameters
-----------
-dic: The dictionnary in which to insert the data.
-key: The key.
-data: The data to insert;
-
-Returns
--------
-void
-*/
-bool insert(RadixDic* dic, char* key, void* data);
+ * Create an empty dictionary.
+ * 
+ * Parameters
+ * ----------
+ * void
+ * 
+ * Returns
+ * -------
+ * An empty dictionary, or NULL in case allocation failed.
+ */
+RadixDic* create_empty_dictionary(void);
 
 /**
-Indicate if a given word key is in a given dictionnary.
-
-Parameters
-----------
-dic: The dictionnary in which to search the key.
-key: The key to search.
-
-Returns
--------
-A boolean indicating if the word is in the dictionnary.
-*/
-
-/**
-Retrieve the data associated to a given key
-
-Parameters
-----------
-dic: The dictionnary in which to search the data.
-key: The key to search.
-keyLength: The length of the key.
-
-Returns
--------
-The data associated to the key, NULL of the key is not in the dictionnary.
-*/
-void* get_data(RadixDic* dic, char* key);
+ * Deallocate a dictionary.
+ * 
+ * Parameters
+ * ----------
+ * dic: The dictionary to deallocate.
+ *
+ * Returns
+ * -------
+ * void
+ */
+void delete_dictionary(RadixDic* dic);
 
 /**
-Indicate if a given word key is in a given dictionnary.
-
-Parameters
-----------
-dic: The dictionnary in which to search the key.
-key: The key to search.
-
-Returns
--------
-A boolean indicating if the word is in the dictionnary.
-*/
-bool is_key_in_dic(RadixDic* dic, char* key);
-
-/**
-Get the root node of a radix dictionnary.
-
-Parameters
-----------
-dic: The dictionnary from which to get the root.
-
-Returns
--------
-The root of the dictionnary.
-*/
-Node* get_root(RadixDic* dic);
+ * Insert data with a given key in a dictionary. If the key is already in the
+ * dictionary, it erases previous content to put new data.
+ * 
+ * Parameters
+ * ----------
+ * dic: The dictionary in which to insert the data.
+ * key: The key.
+ * data: The data to insert, the user should insert a copy of the data as those
+ *	  	 will be freed with dictionary.
+ *
+ * Returns
+ * -------
+ * A boolean indicating if all went well or not.
+ */
+bool insert(RadixDic* dic, const char* key, void* data);
 
 /**
-Get the node correspoding to reading symbol "symbol" form the current node.
-
-Parameters
-----------
-currNode: The current node.
-symbol: The next symbol of the key.
-
-Returns
--------
-The next node if there exist word in the dictionnary with this symbol as next 
-symbol, NULL otherwise. 
-*/
-Node* next_node(Node* currNode, char symbol, bool debug);
-
-/**
-Indicate whether a node is terminal, i.e. represent the end of a word in the
-dictionnary.
-
-Parameters
-----------
-node: The node to check.
-
-Returns
--------
-A boolean indicating whether the node is terminal.
-*/
-bool is_terminal(Node* node);
+ * Indicate if a given word key is in a given dictionary.
+ *
+ * Parameters
+ * ----------
+ * dic: The dictionary in which to search the key.
+ * key: The key to search.
+ *
+ * Returns
+ * -------
+ * A boolean indicating if the word is in the dictionary.
+ */
+bool is_key_in_dic(RadixDic* dic, const char* key);
 
 /**
-Get the data associated to a node.
-
-Parameters
-----------
-node: The node from which to retrieve data.
-
-Returns
--------
-The data associated to the node.
-*/
-char* get_node_data(Node* node);
-
-/**
-Get the number of elements in the dictionnary.
-
-Parameters
-----------
-dic: The dictionnary from which to get the number of elements.
-
-Returns
--------
-The number of elements in the dictionnary.
-*/
-size_t get_dic_size(RadixDic* dic);
+ * Retrieve the data associated to a given key
+ * 
+ * Parameters
+ * ----------
+ * dic: The dictionary in which to search the data.
+ * key: The key to search.
+ * keyLength: The length of the key.
+ *
+ * Returns
+ * -------
+ * The data associated to the key, NULL of the key is not in the dictionary.
+ */
+void* get_data(const RadixDic* dic, const char* key);
 
 /**
-Get length of the key of maximal length in the dictionnary.
-
-Parameters
-----------
-dic: The dictionnary from which to get the maximal key length.
-
-Returns
--------
-The length of the key of maximal length.
-*/
-size_t get_dic_max_length(RadixDic* dic);
+ * Get the root node of a radix dictionary.
+ *
+ * Parameters
+ * ----------
+ * dic: The dictionary from which to get the root.
+ *
+ * Returns
+ * -------
+ * The root of the dictionary.
+ */
+Node* get_root(const RadixDic* dic);
 
 /**
-Get all the data in the dictionnary.
+ * Get the node correspoding to reading symbol "symbol" form the current node.
+ *
+ * Parameters
+ * ----------
+ * currNode: The current node.
+ * symbol: The next symbol of the key.
+ *
+ * Returns
+ * -------
+ * The next node if there exist word in the dictionary with this symbol as next 
+ * symbol, NULL otherwise. 
+ */
+Node* next_node(const Node* currNode, char symbol);
 
-Parameters
-----------
-dic: The dictionnary from which to get the data
+/**
+ * Indicate whether a node is terminal, i.e. represent the end of a word in the
+ * dictionary.
+ *
+ * Parameters
+ * ----------
+ * node: The node to check.
+ * 
+ * Returns
+ * -------
+ * A boolean indicating whether the node is terminal.
+ */
+bool is_terminal(const Node* node);
 
-Returns
--------
-An array of pointers to the data in the dictionnary. Note that the data are not
-duplicated, NULL in case of allocation failure. The array returned is of size
-dic -> size.
-*/
-void** get_all_data(RadixDic* dic);
+/**
+ * Get the data associated to a node.
+ *
+ * Parameters
+ * ----------
+ * node: The node from which to retrieve data.
+ *
+ * Returns
+ * -------
+ * The data associated to the node.
+ */
+char* get_node_data(const Node* node);
+
+/**
+ * Get the number of elements in the dictionary.
+ * 
+ * Parameters
+ * ----------
+ * dic: The dictionary from which to get the number of elements.
+ *
+ * Returns
+ * -------
+ * The number of elements in the dictionary.
+ */
+size_t get_dic_size(const RadixDic* dic);
+
+/**
+ * Get length of the key of maximal length in the dictionary.
+ * 
+ * Parameters
+ * ----------
+ * dic: The dictionary from which to get the maximal key length.
+ *
+ * Returns
+ * -------
+ * The length of the key of maximal length.
+ */
+size_t get_dic_max_length(const RadixDic* dic);
+
+/**
+ * Get all the data in the dictionary.
+ * 
+ * Parameters
+ * ----------
+ * dic: The dictionary from which to get the data
+ *
+ * Returns
+ * -------
+ * An array of pointers to the data in the dictionary. Note that the data are 
+ * not duplicated, NULL in case of allocation failure. The array returned is of 
+ * size dic -> size.
+ */
+void** get_all_data(const RadixDic* dic);
 
 #endif

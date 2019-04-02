@@ -7,11 +7,15 @@ from matplotlib import pyplot as plt
 import subprocess
 
 def generate_dictionnary(fileName, nbWords, maxWordLength, sorted = False):
+	"""
+	Generate a dictionary.
+	"""
+
 	wordSet = set()
 	for _ in range(nbWords):
 		while True:
 			length = random.randint(1, maxWordLength)
-			randomString = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase, k = length))
+			randomString = ''.join(random.choices(string.ascii_uppercase, k = length))
 			if randomString not in wordSet:
 				wordSet.add(randomString)
 				break
@@ -25,9 +29,10 @@ def generate_dictionnary(fileName, nbWords, maxWordLength, sorted = False):
 		for word in wordList:
 			fp.write(word + "\n")
 
-	fp.close()
-
 def generate_grid(fileName, size, wordLength, blancSymbol = False, probaBlanc = 0):
+	"""
+	Generate a grid
+	"""
 	randomChoice = string.ascii_uppercase + string.ascii_lowercase
 
 	grid = []
@@ -38,7 +43,7 @@ def generate_grid(fileName, size, wordLength, blancSymbol = False, probaBlanc = 
 			if blancSymbol and random.uniform(0, 1) < probaBlanc:
 				randomString = "#"
 			else:
-				randomString = ''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase, k = wordLength))
+				randomString = ''.join(random.choices(string.ascii_uppercase, k = wordLength))
 
 			grid[i].append(randomString)
 
@@ -47,8 +52,6 @@ def generate_grid(fileName, size, wordLength, blancSymbol = False, probaBlanc = 
 			for j in range(size - 1):
 				fp.write(grid[i][j] + " ")
 			fp.write(grid[i][size - 1] + "\n")
-
-	fp.close()
 
 DEFAULT_GRID_SIZE = 500
 DEFAULT_DIC_SIZE = 50000
@@ -62,6 +65,9 @@ DIC_SIZES = [10000 * x for x in range(1, 11)]
 GRID_SIZES = [100 * x for x in range(1, 11)]
 
 def generate_files():
+	"""
+	Generate the grid/dic files to use
+	"""
 	try: 
 		os.mkdir("grids")
 	except:
@@ -82,6 +88,7 @@ def generate_files():
 		generate_dictionnary("dics/dic_size_{}.txt".format(dicSize), dicSize, DEFAULT_WORD_LENGTH)
 		generate_dictionnary("dics/sorted_dic_size_{}.txt".format(dicSize), dicSize, DEFAULT_WORD_LENGTH, True)
 
+	"""
 	print("generating grid size")
 	for gridSize in GRID_SIZES:
 		generate_grid("grids/grid_size_{}.txt".format(gridSize), gridSize, DEFAULT_GRID_WORD_LENGTH)
@@ -98,11 +105,15 @@ def generate_files():
 	for blancProba in PROBA_BLANCS:
 		generate_grid("grids/grid_blanc_{}.txt".format(int(blancProba*100)), DEFAULT_GRID_SIZE, DEFAULT_GRID_WORD_LENGTH, 
 					  blancSymbol = True, probaBlanc = blancProba)
+	"""
 
 
 	computationToMake = []
 
 	print("writing grids")
+	for dicSize in DIC_SIZES:
+		computationToMake.append("grids/grid_size_{}.txt dics/sorted_dic_size_{}.txt\n".format(DEFAULT_GRID_SIZE, dicSize))
+	"""
 	for dicSize in DIC_SIZES:
 		computationToMake.append("grids/grid_size_{}.txt dics/dic_size_{}.txt\n".format(DEFAULT_GRID_SIZE, dicSize))
 
@@ -117,23 +128,35 @@ def generate_files():
 
 	for blancProba in PROBA_BLANCS:
 		computationToMake.append("grids/grid_blanc_{}.txt dics/dic_size_{}.txt\n".format(int(blancProba*100), DEFAULT_DIC_SIZE))
+	"""
 
 	with open("plots/toTest.txt", "w") as fp:
 		for computation in computationToMake:
 			fp.write(computation)
 
-	fp.close()
-
 def run_timer():
+	"""
+	Time the executions
+	"""
+
 	print("executing")
 	os.system("gcc timer.c radix.c wordPuzzle.c loader.c -o timer")
 	os.system("./timer")
 
 def run_memory():
+	"""
+	Compute memory usage and plot those
+	"""
+
 	print("memory")
 	os.system("make all")
 
 	def get_memory(gridFileName, dicFileName):
+		"""
+		Compute memory usage using the grid in gridFileName and the dic in 
+		dicFileName
+		"""
+
 		runCommand = "valgrind --log-file=tmpFile ./solver {} {}".format(dicFileName, gridFileName)
 		getResultsCommmand = "cat 'tmpFile' | grep 'total heap usage'"
 		
@@ -161,8 +184,14 @@ def run_memory():
 									"dics/dic_size_{}.txt".format(dicSize))
 			dicSizeMemory.append(memoryUsed)
 			fp.write(str(memoryUsed))
-	
-	fp.close()
+
+
+	plt.plot(DIC_SIZES, dicSizeMemory)
+	plt.xlabel("Dictionnary size")
+	plt.ylabel("Memory (bytes)")
+	plt.title("Evolution of memory usage with dictionnary size")
+	plt.savefig("plots/dicSizeMemory.png")
+	plt.close()
 
 	with open("plots/gridSizeMemory.txt", "w") as fp:
 		for gridSize in GRID_SIZES:
@@ -171,8 +200,14 @@ def run_memory():
 									"dics/dic_size_{}.txt".format(DEFAULT_DIC_SIZE))
 			gridSizeMemory.append(memoryUsed)
 			fp.write(str(memoryUsed))
-	
-	fp.close()
+
+
+	plt.plot(GRID_SIZES, gridSizeMemory)
+	plt.xlabel("Grid size")
+	plt.ylabel("Memory (bytes)")
+	plt.title("Evolution of memory usage with grid size")
+	plt.savefig("plots/gridSizeMemory.png")
+	plt.close()
 	
 	with open("plots/wordLengthMemory.txt", "w") as fp:
 		for wordLength in WORD_LENGTHS:
@@ -182,7 +217,12 @@ def run_memory():
 			wordLengthMemory.append(memoryUsed)
 			fp.write(str(memoryUsed))
 
-	fp.close()
+	plt.plot(WORD_LENGTHS, wordLengthMemory)
+	plt.xlabel("Dic word length")
+	plt.ylabel("Memory (bytes)")
+	plt.title("Evolution of memory usage with dictionnary word length")
+	plt.savefig("plots/wordLengthMemory.png")
+	plt.close()
 
 	with open("plots/wordGridLengthMemory.txt", "w") as fp:
 		for wordGridLength in WORD_GRID_LENGTHS:
@@ -192,45 +232,20 @@ def run_memory():
 			wordGridLengthMemory.append(memoryUsed)
 			fp.write(str(memoryUsed))
 
-	fp.close()
-
-	with open("plots/blancProbaMemory.txt", "w") as fp:
-		for blancProba in PROBA_BLANCS:
-			print("wordGridLength = {}".format(wordGridLength))
-			memoryUsed = get_memory("grids/grid_blanc_{}.txt".format(int(blancProba*100)),
-									"dics/dic_size_{}.txt".format(DEFAULT_DIC_SIZE))
-			blancProbaMemory.append(memoryUsed)
-			fp.write(str(memoryUsed))
-
-	fp.close()
-
-	plt.plot(DIC_SIZES, dicSizeMemory)
-	plt.xlabel("Dictionnary size")
-	plt.ylabel("Memory (bytes)")
-	plt.title("Evolution of memory usage with dictionnary size")
-	plt.savefig("plots/dicSizeMemory.png")
-	plt.close()
-
-	plt.plot(GRID_SIZES, gridSizeMemory)
-	plt.xlabel("Grid size")
-	plt.ylabel("Memory (bytes)")
-	plt.title("Evolution of memory usage with grid size")
-	plt.savefig("plots/gridSizeMemory.png")
-	plt.close()
-
-	plt.plot(WORD_LENGTHS, wordLengthMemory)
-	plt.xlabel("Dic word length")
-	plt.ylabel("Memory (bytes)")
-	plt.title("Evolution of memory usage with dictionnary word length")
-	plt.savefig("plots/wordLengthMemory.png")
-	plt.close()
-
 	plt.plot(WORD_GRID_LENGTHS, wordGridLengthMemory)
 	plt.xlabel("Grid word length")
 	plt.ylabel("Memory (bytes)")
 	plt.title("Evolution of memory usage with grid word length")
 	plt.savefig("plots/wordGridLengthMemory.png")
 	plt.close()
+
+	with open("plots/blancProbaMemory.txt", "w") as fp:
+		for blancProba in PROBA_BLANCS:
+			print("probaBlanc = {}".format(blancProba))
+			memoryUsed = get_memory("grids/grid_blanc_{}.txt".format(int(blancProba*100)),
+									"dics/dic_size_{}.txt".format(DEFAULT_DIC_SIZE))
+			blancProbaMemory.append(memoryUsed)
+			fp.write(str(memoryUsed))
 
 	plt.plot(PROBA_BLANCS, blancProbaMemory)
 	plt.xlabel("Blanc symbol proba")
@@ -240,15 +255,22 @@ def run_memory():
 	plt.close()
 
 def make_graphs():
+	"""
+	Make execution time plots.
+	"""
 	print("plotting")
-	dicSizeTime = []
+	dicSizeSortedTime = []
+	dicSizeUnsortedTime = []
 	gridSizeTime = []
 	wordLengthTime = []
 	wordGridLengthTime = []
 	blancProbaTime = []
 	with open("plots/results.txt", "r") as fp:
 		for dicSize in DIC_SIZES:
-			dicSizeTime.append(float(fp.readline()))
+			dicSizeSortedTime.append(float(fp.readline()))
+		"""
+		for dicSize in DIC_SIZES:
+			dicSizeUnsortedTime.append(float(fp.readline()))
 
 		for gridSize in GRID_SIZES:
 			gridSizeTime.append(float(fp.readline()))
@@ -261,12 +283,21 @@ def make_graphs():
 
 		for blancProba in PROBA_BLANCS:
 			blancProbaTime.append(float(fp.readline()))
-
-	plt.plot([0] + DIC_SIZES, [0] + dicSizeTime)
+		"""
+	
+	plt.plot([0] + DIC_SIZES, [0] + dicSizeSortedTime)
 	plt.xlabel("Dictionnary size")
 	plt.ylabel("Time(sec)")
-	plt.title("Evolution of computation time with dictionnary size")
-	plt.savefig("plots/dicSize.png")
+	plt.title("Evolution of computation time with sorted dictionnary size")
+	plt.savefig("plots/dicSortedSizeShuffled.png")
+	plt.close()
+
+	"""
+	plt.plot([0] + DIC_SIZES, [0] + dicSizeUnsortedTime)
+	plt.xlabel("Dictionnary size")
+	plt.ylabel("Time(sec)")
+	plt.title("Evolution of computation time with unsorted dictionnary size")
+	plt.savefig("plots/dicUnsortedSize.png")
 	plt.close()
 
 	plt.plot([0] + GRID_SIZES, [0] + gridSizeTime)
@@ -296,8 +327,13 @@ def make_graphs():
 	plt.title("Evolution of computation time with blanc symbol probability")
 	plt.savefig("plots/probaBlanc.png")
 	plt.close()
+	"""
 
 def make_estimations():
+	"""
+	Make time and memory complexity graphs.
+	"""
+
 	#generate_files()
 	#run_timer()
 	#make_graphs()

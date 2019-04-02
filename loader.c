@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 #include "radix.h"
 #include "loader.h"
 
@@ -16,17 +17,18 @@ static const size_t MAX_TILE_SIZE = 10;
 static const unsigned int SEED = 11;
 
 /**
-Duplicate a string, allocating memory and copying the content.
-
-Parameters
-----------
-src: The string to duplicate.
-
-Returns
--------
-A pointer to the duplicate of that string.
-*/
+ * Duplicate a string, allocating memory and copying the content.
+ *
+ * Parameters
+ * ----------
+ * src: The string to duplicate.
+ *
+ * Returns
+ * -------
+ * A pointer to the duplicate of that string.
+ */
 char* strdup(const char* src){
+
 	// Compute the size the string to duplicate
 	size_t size;
 	for(size = 0; src[size] != '\0'; size++);
@@ -43,18 +45,49 @@ char* strdup(const char* src){
 }
 
 /**
-Load a grid from a file.
+ * Free a grid filled intil first index i and second index j.
+ *
+ * Parameters
+ * ----------
+ * grid: The grid to free.
+ * gridSize: The size of the grid.
+ * i: The first index bound until which to grid has been filled.
+ * j: The first second bound until which to grid has been filled.
+ *
+ * Returns
+ * -------
+ * void
+ */
+static void free_grid(char*** grid, size_t gridSize, size_t i, size_t j){
 
-Parameters
-----------
-fileName: The name of the file containing the representation of the grid to
-		  load.
-gridSize: A pointer to a size_t that will be set to the size of the grid loaded.
+	// Free filled content
+	for(size_t k = 0; k <= i; k++){
+		for(size_t l = 0; l < j; l ++)
+			free(grid[k][l]);
+	}
 
-Returns
--------
-The loaded grid, a matrix of strings.
-*/
+	// Free the grid
+	for(size_t k = 0; k < gridSize; k++)
+		free(grid[k]);
+
+	free(grid);
+}
+
+/**
+ * Load a grid from a file.
+ *
+ * Parameters
+ * ----------
+ * fileName: The name of the file containing the representation of the grid to
+ *		     load.
+ * gridSize: A pointer to a size_t that will be set to the size of the grid 
+ *           loaded.
+ *
+ * Returns
+ * -------
+ * The loaded grid, a matrix of strings or NULL if bad arguments have been
+ * passed, the file is ill formated or allocation failed.
+ */
 char*** load_grid_from_file(const char* fileName, size_t* gridSize){
 	//Open file
 	FILE* fp = fopen(fileName, "r");
@@ -66,8 +99,10 @@ char*** load_grid_from_file(const char* fileName, size_t* gridSize){
 	char read = fgetc(fp);
 	
 	while(read != LINE_DELIM){
-		if(read == EOF)
+		if(read == EOF){
+			fclose(fp);
 			return NULL;
+		}
 
 		if(read == WORD_DELIM)
 			(*gridSize)++;
@@ -76,34 +111,46 @@ char*** load_grid_from_file(const char* fileName, size_t* gridSize){
 
 	//Allocate grid
 	char*** grid = malloc(*gridSize * sizeof(char**));
-	if(!grid)
+	
+	if(!grid){
+		fclose(fp);
 		return NULL;
+	}
 
 	for(size_t i = 0; i < *gridSize; i++){
 		grid[i] = malloc(*gridSize * sizeof(char*));
-		if(!grid[i])
+		
+		if(!grid[i]){
+			fclose(fp);
+
+			for(size_t j = 0; j < i; j++)
+				free(grid[i]);
+			free(grid);
+
 			return NULL;
+		}
 	}
 
 	//Fill grid
 	rewind(fp);
 
+	char tmpData[MAX_TILE_SIZE + 1];
+
 	for(size_t i = 0; i < *gridSize; i++){
 		for(size_t j = 0; j < *gridSize; j++){
-			// Allocate string
-			char* tmpData = malloc(MAX_TILE_SIZE * sizeof(char));
-			if(!tmpData)
-				return NULL;
-			
+
 			// Fill the string
 			size_t k;
 			read = getc(fp);
 			for(k = 0; read != WORD_DELIM && read != LINE_DELIM; k++){
-				if(read == EOF)
+				
+				if(read == EOF){
+					fclose(fp);
+					free_grid(grid, *gridSize, i, j);
 					return NULL;
+				}
 
-				//fprintf(stderr, "grid[%ld][%ld][%ld] = %c\n", i, j, k, read);
-				tmpData[k] = read;
+				tmpData[k] = toupper(read);
 
 				read = getc(fp);
 			}
@@ -111,17 +158,20 @@ char*** load_grid_from_file(const char* fileName, size_t* gridSize){
 			// Add terminal caracter at the end of the string
 			tmpData[k] = '\0';
 
-			// Use only the right amount of memory
+			// Use only the needed amount of memory
 			grid[i][j] = strdup(tmpData);
-			free(tmpData);
-
-			if(!grid[i][j])
+			if(!grid[i][j]){
+				fclose(fp);
+				free_grid(grid, *gridSize, i, j);
 				return NULL;
+			}
 		}
 
-		if(read != LINE_DELIM)
+		if(read != LINE_DELIM){
+			fclose(fp);
+			free_grid(grid, *gridSize, i, *gridSize);
 			return NULL;
-
+		}
 	}
 
 	fclose(fp);
@@ -130,29 +180,34 @@ char*** load_grid_from_file(const char* fileName, size_t* gridSize){
 }
 
 /**
-Load a radix dictionary from a file.
-
-Parameters
-----------
-fileName: The name of the file containing the representation of the dictionary 
-		  to load.
-random: A boolean indicating if the words have to be inserted in the dictionary
-		in a random order. If false, the words will be inserted in the same
-		order as in the file.
-
-Returns
--------
-The loaded grid, a matrix of strings.
-*/
+ * Load a radix dictionary from a file.
+ *
+ * Parameters
+ * ----------
+ * fileName: The name of the file containing the representation of the 
+ *           dictionary to load.
+ * random: A boolean indicating if the words have to be inserted in the 
+ *		   dictionary in a random order. If false, the words will be inserted 
+ *		   in the same order as in the file.
+ *
+ * Returns
+ * -------
+ * The loaded grid, a matrix of strings or NULL if bad arguments have been
+ * passed, the file is ill formated or allocation failed.
+ */
 RadixDic* load_dic_from_file(const char* fileName, bool random){
+	
 	//Open file
 	FILE* fp = fopen(fileName, "r");
-	if(!fp){
-		fprintf(stderr, "fail open dic\n");
+	if(!fp)
+		return NULL;
+
+	RadixDic* dic = create_empty_dictionary();
+
+	if(!dic){
+		fclose(fp);
 		return NULL;
 	}
-
-	RadixDic* dic = create_empty_dictionnary();
 
 	srand(SEED);
 
@@ -162,11 +217,15 @@ RadixDic* load_dic_from_file(const char* fileName, bool random){
 	size_t dicSize = 0;
 	size_t nbReadLine = 0;
 	size_t maxReadLine = 0;
+
+	// Compute the number of line and the maximum line length
 	while(read != EOF){
+
 		nbReadLine++;
 		if(read == '\n'){
 			if(nbReadLine > maxReadLine)
 				maxReadLine = nbReadLine;
+
 			nbReadLine = 0;
 			dicSize++;
 		}
@@ -174,72 +233,111 @@ RadixDic* load_dic_from_file(const char* fileName, bool random){
 	}
 	
 	dicSize++;
+
 	rewind(fp);
 	read = NOT_SPECIAL_CHAR;
 
-	char** buffer;
+	// If we insert the word in random order insert them in a buffer.
+	char** buffer = NULL;
 	if(random){
 		buffer = malloc(dicSize * sizeof(char*));
-		if(!buffer)
+		
+		if(!buffer){
+			fclose(fp);
+			delete_dictionary(dic);
 			return NULL;
+		}
 	}
 
+	char tmpData[maxReadLine + 1];
+
+	// Read the dictionary
 	size_t nbWords;
 	for(nbWords = 0; read != EOF; nbWords++){
-		char* tmpData = malloc(maxReadLine + 1 * sizeof(char));
-		if(!tmpData)
-			return NULL;
-
+		
 		read = fgetc(fp);
-		if(read == EOF){
-			free(tmpData);
+		
+		if(read == EOF)
 			break;
-		}
 
+		// Read current word
 		size_t i;
 		for(i = 0; read != LINE_DELIM && read != EOF; i++){
-			tmpData[i] = read;
+			tmpData[i] = toupper(read);
 			read = fgetc(fp);
 		}
+
 		tmpData[i] = '\0';
 
 		// Use only the right amount of memory
 		char* data = strdup(tmpData);
-		free(tmpData);
 
-		if(!data)
+		if(!data){
+			fclose(fp);
+			delete_dictionary(dic);
+
+			if(random)
+				for(size_t i = 0; i < nbWords; i++)
+					free(buffer[i]);
+
+			free(buffer);
+
 			return NULL;
+		}
 
+		// If we insert the words in random order insert the foudn word in a
+		// buffer
 		if(random){
 			buffer[nbWords] = data;
 		}
 
+		// Otherwise insert the word directly in the dictionary.
 		else{
-			//fprintf(stderr, "inserted = %s\n", data);
-			/*
-			if(strcmp(data, "G") == 0)
-				fprintf(stderr, "insert G\n");
-				*/
+			if(!insert(dic, data, data)){
+				fclose(fp);
+				delete_dictionary(dic);
 
-			insert(dic, data, data);
+				if(random)
+					for(size_t i = 0; i <= nbWords; i++)
+						free(buffer[i]);
+
+				free(buffer);
+
+				return NULL;
+			}
 		}
 	}
 
+	// If we insert the words in random order, insert the words stored in a
+	// buffer in the dictionary.
 	if(random){
 		size_t nbWordsToInsert = nbWords;
 		
-		size_t indicesToInsert[nbWords];
-
-		for(size_t i = 0; i < nbWords; i++){
-			indicesToInsert[i] = i;
-		}
-
 		size_t insertIndex;
 		for(size_t i = 0; i < nbWords; i++){
+			
+			// Chose a random index to insert
 			insertIndex = rand()%nbWordsToInsert;
-			insert(dic, buffer[indicesToInsert[insertIndex]],
-				   buffer[indicesToInsert[insertIndex]]);
-			indicesToInsert[insertIndex] = indicesToInsert[--nbWordsToInsert];
+
+			// Insert the word at this random index
+			if(!insert(dic, buffer[insertIndex], buffer[insertIndex])){
+				
+				for(size_t j = 0; j < nbWordsToInsert; j++)
+					free(buffer[j]);
+				
+				free(buffer);
+				delete_dictionary(dic);
+				
+				return NULL;
+			}
+
+			nbWordsToInsert--;
+
+			// Swap last ununsed index with this random index to avoid 
+			// repetitions
+			char* tmp = buffer[nbWordsToInsert];
+			buffer[nbWordsToInsert] = buffer[insertIndex];
+			buffer[insertIndex] = tmp;
 		}
 	}
 
